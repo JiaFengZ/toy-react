@@ -1,0 +1,76 @@
+class ElementWrapper {
+  constructor (tagName) {
+    this.root = document.createElement(tagName)
+  }
+  setAttribute (name, value) {
+    this.root.setAttribute(name, value)
+  }
+  appendChild (component) {
+    this.root.appendChild(component.root)
+  }
+}
+
+class TextWrapper {
+  constructor (text) {
+    this.root = document.createTextNode(text)
+  }
+}
+
+export class Component {
+  constructor () {
+    this.props = Object.create(null)
+    this.children = []
+    this._root = null
+  }
+
+  setAttribute (name, value) {
+    this.props[name] = value
+  }
+
+  appendChild (component) {
+    this.children.push(component)
+  }
+
+  get root () {
+    if (!this._root) {
+      this._root = this.render().root
+    }
+    return this._root
+  }
+}
+
+export function createElement (type, attributes, ...children) {
+  let e
+  if (typeof type === 'string') {
+    e = new ElementWrapper(type)
+  } else {
+    e = new type
+  }
+  for (let key in attributes) {
+    e.setAttribute(key, attributes[key])
+  }
+  let insertChild = (children) => {
+    for (let child of children) {
+      if (typeof child === 'string') {
+        child = new TextWrapper(child)
+      }
+      if (typeof child === 'object' && child instanceof Array) {
+        insertChild(child)
+      } else {
+        e.appendChild(child)
+      }
+    }
+  }
+  insertChild(children)
+  return e
+}
+
+export function render (component, parentElement) {
+  parentElement.appendChild(component.root)
+}
+
+const ToyReact = {
+  Component,
+  createElement
+}
+export default ToyReact
